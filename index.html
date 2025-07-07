@@ -3,689 +3,837 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Cortocircuito Profesional v23 (Versión Final)</title>
+    <title>Planificador de Puesta a Tierra TT (AEA) v2.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configuración de MathJax para renderizar fórmulas LaTeX
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --brand-color: #4f46e5; --brand-color-light: #eef2ff; --line-color: #374151; }
-        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-        .input-group { margin-bottom: 1rem; }
-        .input-group label { display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 500; font-size: 0.875rem; }
-        .input-group input, .input-group select { width: 100%; padding: 0.75rem; border: 1px solid #d2d6dc; border-radius: 0.5rem; transition: border-color 0.2s, box-shadow 0.2s; }
-        .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--brand-color); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4); }
-        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; display: inline-flex; align-items: center; justify-content: center; border: none; }
-        .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
-        .result-card { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
-        .result-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb; }
-        .result-item:last-child { border-bottom: none; }
-        .log-box { background-color: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 1rem; margin-top: 1rem; font-family: 'Courier New', Courier, monospace; font-size: 0.8rem; color: #1f2937; max-height: 200px; overflow-y: auto;}
-        details > summary { cursor: pointer; font-weight: 500; color: #374151; }
-        .section-divider { border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; padding-bottom: 1.5rem; }
-        .anexo-box { background-color: var(--brand-color-light); border-top: 3px solid var(--brand-color); padding: 2rem; margin-top: 3rem; border-radius: 0.75rem; }
-        .anexo-box h3 { font-size: 1.75rem; font-weight: 700; color: #4338ca; margin-bottom: 1.5rem; }
-        .anexo-box h4 { font-size: 1.25rem; font-weight: 600; color: #4338ca; margin-bottom: 0.75rem; margin-top: 1.5rem; }
-        .anexo-box p { color: #374151; line-height: 1.6; }
-        table { width: 100%; text-align: left; border-collapse: collapse; font-size: 0.9rem; background-color: white; }
-        th, td { padding: 0.75rem; border: 1px solid #d1d5db; text-align: center;}
-        th { background-color: #e5e7eb; font-weight: 600; }
-        .calculation-log-entry { padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.5; }
-        .calculation-log-entry:last-child { border-bottom: none; }
-        .calculation-log-entry strong { color: var(--brand-color); }
-        .feeder-node { border: 2px solid var(--brand-color); border-radius: 0.75rem; padding: 1.5rem; margin-top: 1.5rem; background-color: #fafbff; }
-        .cable-node { border: 1px solid #d1d5db; border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; background-color: white; }
-        .node-actions { margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end; }
-        .children-container { margin-top: 1rem; margin-left: 1rem; padding-left: 1rem; border-left: 2px solid var(--brand-color); }
-        .node-name-input { background-color: transparent; border: none; font-weight: bold; width: 100%; padding: 2px; border-radius: 3px; }
-        .node-name-input:hover { background-color: #f0f4ff; }
-        .node-name-input:focus { outline: none; box-shadow: 0 0 0 2px var(--brand-color); }
-        .input-error { border-color: #ef4444 !important; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4) !important; }
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #d1d5db; }
+        .tab-button.active { border-color: #3b82f6; color: #3b82f6; background-color: #1f2937; }
+        .tab-button { border-color: #4b5563; }
+        .result-section, .mode-section, .electrode-params { display: none; }
+        .loader { border: 4px solid #4b5563; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #export-content { position: absolute; left: -9999px; top: -9999px; }
+        .sector-card, .info-card { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Tooltip Styles */
+        .tooltip-container { position: relative; display: inline-block; cursor: help; }
+        .tooltip-icon { font-size: 10px; padding: 2px 6px; border-radius: 50%; background-color: #4b5563; color: white; margin-left: 5px; user-select: none; }
+        .tooltip-text { visibility: hidden; width: 250px; background-color: #1f2937; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 10; bottom: 125%; left: 50%; margin-left: -125px; opacity: 0; transition: opacity 0.3s; border: 1px solid #4b5563; font-size: 0.8rem; pointer-events: none; }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
 
-        /* Estilos Diagrama Unifilar Profesional */
-        .diagram-container { display: flex; flex-direction: column; align-items: center; font-family: 'Courier New', monospace; font-size: 13px; padding: 1rem; background-color: #fff; }
-        .diagram-line { width: 2px; background-color: var(--line-color); flex-shrink: 0; }
-        .diagram-bus { width: 100%; height: 5px; background-color: var(--line-color); margin: 0; position: relative; }
-        .diagram-children-wrapper { display: flex; flex-direction: row; justify-content: space-around; align-items: flex-start; width: 100%; gap: 24px; }
-        .diagram-branch { display: flex; flex-direction: column; align-items: center; flex-grow: 1; min-width: 140px; position: relative; }
-        .diagram-label { color: #555; font-size: 11px; white-space: nowrap; }
-        .diagram-icon-wrapper { position: relative; display: flex; justify-content: center; align-items: center; width: 100%; height: 40px; }
-        .diagram-icon { height: 32px; width: auto; background-color: #fff; padding: 0 2px; z-index: 1; }
-        .diagram-fault-icon { height: 20px; width: auto; flex-shrink: 0; margin-left: 8px; z-index: 2; }
-        .diagram-line-through { position: absolute; width: 2px; height: 100%; background-color: var(--line-color); z-index: 0; }
-        #diagramModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); z-index: 1000; display: none; justify-content: center; align-items: center; }
-        #diagramModalContent { background-color: #fff; padding: 20px; border-radius: 10px; max-width: 95vw; max-height: 95vh; overflow: auto; }
-        #closeDiagramModal { position: absolute; top: 15px; right: 25px; font-size: 35px; color: white; cursor: pointer; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-900 text-gray-200">
 
-    <div id="diagramModal">
-        <span id="closeDiagramModal">&times;</span>
-        <div id="diagramModalContent"></div>
-    </div>
-
-    <div class="container mx-auto p-4 md:p-8 max-w-screen-2xl">
-        <header class="text-center mb-8 relative">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Calculadora de Cortocircuito Profesional</h1>
-            <p class="text-md text-gray-600 mt-2">Análisis con Diagrama Unifilar Dinámico</p>
+    <div class="container mx-auto p-4 md:p-8 relative">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-white">Planificador de Puesta a Tierra (Esquema TT)</h1>
+            <p class="text-gray-400 mt-2">Diseño de proyecto según reglamentación AEA 90364. v2.2</p>
         </header>
 
-        <div class="mb-12">
-            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800 border-b pb-3">Análisis de Impedancia de Falla</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+
+            <!-- Columna de Parámetros -->
+            <div class="md:col-span-4 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                <div>
+                    <label for="mode_selector" class="block text-sm font-medium text-gray-300 mb-2">Modo de Calculadora</label>
+                    <select id="mode_selector" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2">
+                        <option value="domiciliaria">Verificación Domiciliaria</option>
+                        <option value="proyecto">Proyecto Completo (Multi-Sector)</option>
+                    </select>
+                </div>
                 
-                <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-2">
-                    <form id="shortCircuitForm">
-                        <div class="section-divider">
-                            <h3 class="text-xl font-semibold mb-4 text-gray-800">1. Red de Distribución (MT)</h3>
-                            <div class="input-group"><label for="sccRed">Scc Red [MVA]</label><input type="number" id="sccRed" value="250" min="1" class="data-input"></div>
-                            <div class="input-group"><label for="tensionRed">Tensión Red [kV]</label><input type="number" id="tensionRed" value="13.2" min="1" class="data-input"></div>
-                        </div>
+                <hr class="border-gray-600 my-6">
 
-                        <div id="transformerFeedersContainer"></div>
-                        
-                        <div class="mt-6 flex space-x-4">
-                            <button type="button" id="addFeederBtn" class="btn bg-purple-600 hover:bg-purple-700 text-white w-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                                Agregar Alimentador
-                            </button>
-                             <button type="button" id="resetButtonSC" class="btn bg-red-600 hover:bg-red-700 text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
-                                Reiniciar
-                            </button>
-                        </div>
-                    </form>
+                <!-- Parámetros Comunes -->
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-semibold -mt-2">1. Parámetros Generales</h2>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            Condiciones / Tensión Límite ($U_L$)
+                            <span class="tooltip-container">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-text">Tensión máxima a la que puede quedar sometida una persona indefinidamente. 24V para locales húmedos/exteriores o sin supervisión. 50V para locales secos con personal instruido.</span>
+                            </span>
+                        </label>
+                        <select id="ul_condition" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2">
+                            <option value="24" selected>Común / Sin supervisión (UL = 24V)</option>
+                            <option value="50">Seco / Personal capacitado (UL = 50V)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tipo_suelo" class="block text-sm font-medium text-gray-300 mb-2">
+                            Resistividad Base del Terreno (ρ)
+                             <span class="tooltip-container">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-text">Oposición del suelo al paso de corriente. Varía según el tipo de suelo. Seleccione un valor de tabla o ingrese uno medido.</span>
+                            </span>
+                        </label>
+                        <select id="tipo_suelo" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mb-2">
+                            <option value="10" selected>Arcillas (10 Ω·m)</option>
+                            <option value="5">Aluvial (5 Ω·m)</option>
+                            <option value="20">Greda (20 Ω·m)</option>
+                            <option value="50">T. calcárea (50 Ω·m)</option>
+                            <option value="100">Arenisca (100 Ω·m)</option>
+                            <option value="custom">Ingresar valor manual...</option>
+                        </select>
+                        <input type="number" id="resistividad_manual" placeholder="Ej: 80" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 hidden">
+                    </div>
+                     <div>
+                        <label for="humedad_terreno" class="block text-sm font-medium text-gray-300 mb-2">
+                            Condiciones de Humedad del Terreno
+                             <span class="tooltip-container">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-text">Ajusta la resistividad base. La humedad reduce la resistividad. 'Seco' aumenta el valor, 'Húmedo' lo reduce.</span>
+                            </span>
+                        </label>
+                        <select id="humedad_terreno" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2">
+                            <option value="1.5">Seco (aumenta resistividad)</option>
+                            <option value="1.0" selected>Normal (valor base)</option>
+                            <option value="0.7">Húmedo (reduce resistividad)</option>
+                        </select>
+                    </div>
                 </div>
-
-                <div class="space-y-8 lg:col-span-3">
-                    <div id="diagramCard" class="bg-white p-6 rounded-xl shadow-md">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-semibold text-gray-800">Diagrama Unifilar</h3>
-                            <button id="fullscreenDiagramBtn" class="btn btn-sm bg-gray-200 hover:bg-gray-300 text-gray-700" title="Ver en Pantalla Completa">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 1v4m0 0h-4m4 0l-5-5" /></svg>
-                            </button>
-                        </div>
-                        <div id="diagramContainerWrapper" class="p-4 border rounded-lg bg-gray-50 min-h-[400px] overflow-x-auto">
-                            <div id="diagramContainer"></div>
+                
+                <!-- Modo Domiciliaria -->
+                <div id="mode_domiciliaria" class="mode-section mt-8 space-y-6">
+                    <h2 class="text-2xl font-semibold border-b border-gray-600 pb-3">2. Puesta a Tierra a Verificar</h2>
+                    <div class="space-y-3">
+                         <label class="text-sm font-medium text-gray-300">Sensibilidad Diferencial (IΔn)</label>
+                         <select id="domiciliaria_rcd" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2">
+                             <option value="30" selected>30 mA</option><option value="100">100 mA</option><option value="300">300 mA</option>
+                             <option value="500">500 mA</option><option value="1000">1 A</option>
+                         </select>
+                         <div class="mt-2">
+                             <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                                 <input type="checkbox" id="domiciliaria_manual_obj_check" class="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-500 rounded">
+                                 <span>Usar objetivo manual de resistencia</span>
+                             </label>
+                             <input type="number" id="domiciliaria_manual_obj_input" placeholder="Ej: 5 Ω" class="w-full bg-gray-600 border-gray-500 rounded-md px-3 py-1.5 mt-2 hidden">
+                         </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-300">Tipo de Electrodo</label>
+                        <select id="domiciliaria_electrode_type" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-2">
+                            <option value="jabalina_v" selected>Jabalina Vertical</option>
+                            <option value="jabalina_h">Jabalina Horizontal</option>
+                            <option value="placa">Placa</option>
+                            <option value="malla">Malla</option>
+                        </select>
+                    </div>
+                    <!-- Parámetros Jabalina Vertical -->
+                    <div id="domiciliaria_jabalina_v_params" class="electrode-params space-y-2">
+                         <label class="text-sm font-medium text-gray-300">Dimensiones Jabalina</label>
+                         <div class="grid grid-cols-2 gap-2">
+                             <select id="domiciliaria_l" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2"><option value="1.5">1.5m</option><option value="3" selected>3m</option></select>
+                             <select id="domiciliaria_d" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2"><option value="0.0127">1/2"</option><option value="0.0158">5/8"</option><option value="0.01905" selected>3/4"</option></select>
+                         </div>
+                    </div>
+                    <!-- Parámetros Jabalina Horizontal -->
+                    <div id="domiciliaria_jabalina_h_params" class="electrode-params space-y-2">
+                        <label class="text-sm font-medium text-gray-300">Dimensiones Conductor Horizontal (m)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="domiciliaria_h_l" value="10" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2" placeholder="Longitud">
+                            <input type="number" id="domiciliaria_h_p" value="0.5" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2" placeholder="Profundidad">
                         </div>
                     </div>
-                    <div id="resultsContainerSC" class="bg-white p-6 rounded-xl shadow-md">
-                        <div class="flex justify-between items-center"><h3 class="text-xl font-semibold mb-4 text-gray-800">Resultados</h3>
-                            <div class="flex gap-2">
-                                 <button id="exportWordBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-3">Word</button>
-                                 <button id="exportSCBtn" class="btn bg-green-600 hover:bg-green-700 text-white text-sm py-2 px-3">CSV</button>
-                            </div>
+                    <!-- Parámetros Placa -->
+                    <div id="domiciliaria_placa_params" class="electrode-params space-y-2">
+                        <label class="text-sm font-medium text-gray-300">Dimensiones Placa (m)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                           <input type="number" id="domiciliaria_placa_a" value="1" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2" placeholder="Lado A">
+                           <input type="number" id="domiciliaria_placa_b" value="1" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2" placeholder="Lado B">
                         </div>
-                        <div id="resultsPlaceholderSC" class="text-center text-gray-500 py-10"><svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg><p class="mt-4">Agregue un alimentador para comenzar.</p></div>
-                        <div id="resultsContentSC"></div>
+                    </div>
+                     <!-- Parámetros Malla -->
+                    <div id="domiciliaria_malla_params" class="electrode-params space-y-2">
+                        <label class="text-sm font-medium text-gray-300">Dimensiones Malla (m)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="domiciliaria_malla_l" value="5" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2" placeholder="Longitud Total Conductor">
+                            <input type="number" id="domiciliaria_malla_A" value="4" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2" placeholder="Área (m²)">
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div id="anexo" class="anexo-box">
-            <h3>Anexo Técnico</h3>
-            <div>
-                <h4>Fundamentos Normativos (IRAM / AEA)</h4>
-                <p>El cálculo de corrientes de cortocircuito es un requisito fundamental de la <strong>Reglamentación para la Ejecución de Instalaciones Eléctricas en Inmuebles AEA 90364</strong>. El objetivo es asegurar que todos los componentes de la instalación (cables, interruptores, tableros) puedan soportar los esfuerzos térmicos y dinámicos producidos por una falla. Esta calculadora aplica el <strong>método de las impedancias</strong>, que consiste en sumar todas las impedancias (Red, transformadores, cables) desde la fuente hasta el punto de falla para determinar la corriente de cortocircuito máxima (Icc). La verificación del cable se realiza según la fórmula de solicitación térmica adiabática (I²t), especificada en la norma <strong>IRAM 2178</strong>, asegurando que la energía que el cable puede soportar ($K^2S^2$) sea mayor a la energía que deja pasar la protección ($I_{cc}^2t$).</p>
-            </div>
-             <div>
-                <h4>Aporte de Motores al Cortocircuito</h4>
-                <p>Durante un cortocircuito, la tensión del sistema cae bruscamente. En ese instante, los motores de inducción, por su inercia y el campo magnético remanente en su rotor, dejan de consumir energía y comienzan a funcionar como generadores, aportando corriente a la falla. Este aporte es de corta duración (típicamente unos pocos ciclos) pero significativo. Según la bibliografía técnica, se estima que un motor puede aportar una corriente de entre <strong>4 a 6 veces su corriente nominal (In)</strong>. Esta calculadora utiliza un factor conservador de 5. Es crucial considerar este aporte, ya que la corriente total que debe interrumpir una protección en un tablero no es solo la que proviene de la red, sino la suma de la corriente de la red más la de todos los motores aguas abajo del punto de falla.</p>
-            </div>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-                 <div> <h4 class="text-lg font-semibold mb-2 text-indigo-700">Factor de Impulso χ (Kappa)</h4> <div class="overflow-x-auto"> <table id="kappaTable"></table> </div> </div>
-                 <div> <h4 class="text-lg font-semibold mb-2 text-indigo-700">Valores Típicos para Transformadores</h4> <div class="overflow-x-auto"> <table id="trafoTable"></table> </div> </div>
-            </div>
-            <div class="mt-8">
-                <h4 class="text-lg font-semibold mb-2 text-indigo-700">Memoria de Cálculo (Paso a Paso)</h4>
-                <div id="calculationLogContainer" class="bg-white p-4 rounded-lg shadow-inner max-h-96 overflow-y-auto">
-                    <p class="text-gray-500 p-4 text-center">El detalle del cálculo aparecerá aquí.</p>
+                <!-- Modo Proyecto -->
+                <div id="mode_proyecto" class="mode-section mt-8">
+                     <div class="space-y-6">
+                         <h2 class="text-2xl font-semibold border-b border-gray-600 pb-3">2. Puesta a Tierra de Servicio (RB)</h2>
+                         <p class="text-xs text-gray-400 -mt-2">Sistema para el neutro de la acometida. Objetivo ≤ 1.0 Ω por defecto.</p>
+                         <div>
+                             <label class="text-sm font-medium text-gray-300">Jabalina para Servicio</label>
+                             <div class="grid grid-cols-2 gap-2 mt-2">
+                                 <select id="proyecto_service_l" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2"><option value="1.5">1.5m</option><option value="3" selected>3m</option></select>
+                                 <select id="proyecto_service_d" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2"><option value="0.0127">1/2"</option><option value="0.0158">5/8"</option><option value="0.01905" selected>3/4"</option></select>
+                             </div>
+                         </div>
+                         <div>
+                             <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                                 <input type="checkbox" id="proyecto_service_manual_check" class="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-500 rounded">
+                                 <span>Usar objetivo manual</span>
+                             </label>
+                             <input type="number" id="proyecto_service_manual_input" value="1" placeholder="Ej: 0.8 Ω" class="w-full bg-gray-600 border-gray-500 rounded-md px-3 py-1.5 mt-2 hidden">
+                         </div>
+                     </div>
+                    <h2 class="text-2xl font-semibold border-b border-gray-600 pb-3 mb-4 mt-8">3. Sectores de Protección (RA)</h2>
+                    <div id="sectores-container" class="space-y-4"></div>
+                    <button id="addSectorBtn" class="mt-4 w-full flex items-center justify-center py-2 px-4 border border-dashed border-gray-500 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:border-white transition">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+                        Añadir Sector
+                    </button>
                 </div>
+
+                <button id="calcularBtn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg mt-8 hover:bg-blue-700 transition-colors"></button>
+            </div>
+
+            <!-- Columna de Resultados -->
+            <div class="md:col-span-8">
+                <div id="results-container" class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg min-h-full" style="display: none;"></div>
+                <div id="initial-message" class="flex items-center justify-center bg-gray-800 p-6 rounded-xl border-2 border-dashed border-gray-700 min-h-full">
+                    <div class="text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <h3 class="mt-2 text-lg font-medium text-white">Listo para Planificar</h3>
+                        <p class="mt-1 text-sm text-gray-400">Seleccione el modo, complete los parámetros y presione "Calcular".</p>
+                    </div>
+                </div>
+                <div id="loader-container" class="hidden items-center justify-center bg-gray-800 p-6 rounded-xl"><div class="loader"></div></div>
             </div>
         </div>
     </div>
+    <textarea id="export-content"></textarea>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // --- CONSTANTES Y DATOS DE TABLAS ---
-    const CONSTS = {
-        CABLE_SECTIONS: ["1.5", "2.5", "4", "6", "10", "16", "25", "35", "50", "70", "95", "120", "150", "185", "240", "300", "400", "500", "630"],
-        CABLE_RESISTANCE: { // Resistencia en Ω/km a T° de servicio (70°C para PVC, 90°C para XLPE)
-            cobre: {
-                pvc:  {'1.5':15.91,'2.5':9.55,'4':5.92,'6':3.95,'10':2.29,'16':1.48,'25':0.934,'35':0.663,'50':0.463,'70':0.326,'95':0.248,'120':0.195,'150':0.157,'185':0.13,'240':0.1, '300': 0.082, '400': 0.062, '500': 0.051, '630': 0.041},
-                xlpe: {'1.5':16.96,'2.5':10.18,'4':6.31,'6':4.21,'10':2.44,'16':1.54,'25':0.995,'35':0.707,'50':0.493,'70':0.348,'95':0.264,'120':0.207,'150':0.167,'185':0.138,'240':0.106, '300': 0.086, '400': 0.064, '500': 0.052, '630': 0.042}
-            },
-            aluminio: { // Valores ajustados según documentación (Apuntes Ing. Massa, Tabla Resistencia Unipolares)
-                pvc:  {'16':2.392,'25':1.513,'35':1.093,'50':0.800,'70':0.558,'95':0.403,'120':0.321,'150':0.262,'185':0.209,'240':0.161, '300': 0.128, '400': 0.102, '500': 0.084, '630': 0.067},
-                xlpe: {'16':2.392,'25':1.513,'35':1.093,'50':0.800,'70':0.558,'95':0.403,'120':0.321,'150':0.262,'185':0.209,'240':0.161, '300': 0.128, '400': 0.102, '500': 0.084, '630': 0.067}
-            }
+// --- DATABASE & DEFAULTS ---
+const DB = {
+    soilResistivity: { '10': 'Arcillas', '5': 'Aluvial', '20': 'Greda', '50': 'Tierra calcárea', '100': 'Arenisca' },
+    parallelCoefficients: { 1: 1.0, 2: 0.57, 3: 0.42, 4: 0.33, 5: 0.27, 6: 0.24, 7: 0.21, 8: 0.19, 9: 0.17, 10: 0.15 },
+    aeaTable: { 
+        "50": { "30": 1666, "100": 500, "300": 167, "500": 100, "1000": 50, "3000": 17, "5000": 10, "10000": 5, "20000": 2.5 }, 
+        "24": { "30": 800, "100": 240, "300": 80, "500": 48, "1000": 24, "3000": 8, "5000": 4.8, "10000": 2.4, "20000": 1.2 } 
+    },
+    aeaFinalCap: { "30": 40, "100": 40, "300": 40, "500": 24, "1000": 12, "3000": 4, "5000": 2.4, "10000": 1.2, "20000": 0.6 }
+};
+let sectorCount = 0;
+let currentResults = null;
+
+// --- DOM ELEMENTS ---
+const getElement = id => document.getElementById(id);
+const dom = {
+    mode_selector: getElement('mode_selector'),
+    mode_proyecto: getElement('mode_proyecto'),
+    mode_domiciliaria: getElement('mode_domiciliaria'),
+    tipoSuelo: getElement('tipo_suelo'), 
+    resistividadManual: getElement('resistividad_manual'),
+    humedadTerreno: getElement('humedad_terreno'),
+    ul_condition: getElement('ul_condition'),
+    calcularBtn: getElement('calcularBtn'), 
+    resultsContainer: getElement('results-container'),
+    initialMessage: getElement('initial-message'),
+    loaderContainer: getElement('loader-container'),
+    exportTextarea: getElement('export-content'), 
+    addSectorBtn: getElement('addSectorBtn'),
+    sectoresContainer: getElement('sectores-container')
+};
+
+// --- EVENT LISTENERS ---
+function addEventListeners() {
+    dom.mode_selector.addEventListener('change', handleModeChange);
+    dom.tipoSuelo.addEventListener('change', () => {
+        dom.resistividadManual.classList.toggle('hidden', dom.tipoSuelo.value !== 'custom');
+        saveState();
+    });
+    dom.calcularBtn.addEventListener('click', () => {
+        if (dom.mode_selector.value === 'proyecto' && document.querySelectorAll('.sector-card').length === 0) {
+            alert('Debe añadir al menos un sector de protección.'); return;
+        }
+        dom.resultsContainer.style.display = 'none';
+        dom.initialMessage.style.display = 'none';
+        dom.loaderContainer.style.display = 'flex';
+        setTimeout(performCalculations, 500);
+    });
+    dom.addSectorBtn.addEventListener('click', () => { addSector(); saveState(); });
+
+    // Listeners for saving state
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('change', saveState);
+        el.addEventListener('keyup', saveState);
+    });
+
+    // Listener for electrode type change in Domiciliaria
+    getElement('domiciliaria_electrode_type').addEventListener('change', (e) => handleElectrodeTypeChange('domiciliaria', e.target.value));
+}
+
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    addEventListeners();
+    loadState();
+    handleModeChange();
+    if (dom.mode_selector.value === 'proyecto' && document.querySelectorAll('.sector-card').length === 0) {
+        addSector();
+    }
+});
+
+// --- STATE MANAGEMENT (localStorage) ---
+function saveState() {
+    const state = {
+        mode: dom.mode_selector.value,
+        ul: dom.ul_condition.value,
+        tipoSuelo: dom.tipoSuelo.value,
+        resistividadManual: dom.resistividadManual.value,
+        humedad: dom.humedadTerreno.value,
+        domiciliaria: {
+            rcd: getElement('domiciliaria_rcd').value,
+            manualCheck: getElement('domiciliaria_manual_obj_check').checked,
+            manualInput: getElement('domiciliaria_manual_obj_input').value,
+            electrodeType: getElement('domiciliaria_electrode_type').value,
+            l: getElement('domiciliaria_l').value,
+            d: getElement('domiciliaria_d').value,
+            h_l: getElement('domiciliaria_h_l').value,
+            h_p: getElement('domiciliaria_h_p').value,
+            placa_a: getElement('domiciliaria_placa_a').value,
+            placa_b: getElement('domiciliaria_placa_b').value,
+            malla_l: getElement('domiciliaria_malla_l').value,
+            malla_A: getElement('domiciliaria_malla_A').value,
         },
-        CABLE_REACTANCE: { // Reactancia en Ω/km
-            unipolar: {'1.5':0.08,'2.5':0.08,'4':0.08,'6':0.078,'10':0.136,'16':0.126,'25':0.117,'35':0.111,'50':0.106,'70':0.1,'95':0.095,'120':0.091,'150':0.086,'185':0.083,'240':0.081, '300': 0.083, '400': 0.081, '500': 0.080, '630': 0.079},
-            tripolar: {'1.5':0.08,'2.5':0.08,'4':0.08,'6':0.078,'10':0.115,'16':0.107,'25':0.1,'35':0.095,'50':0.091,'70':0.086,'95':0.083,'120':0.081,'150':0.079,'185':0.079,'240':0.076, '300': 0.075, '400': 0.074, '500': 0.073, '630': 0.072}
-        },
-        K_FACTOR_CC: { cobre: { pvc: 115, xlpe: 143 }, aluminio: { pvc: 76, xlpe: 94 }},
-        KAPPA_TABLE: [{r:0,k:2},{r:0.1,k:1.86},{r:0.2,k:1.71},{r:0.3,k:1.57},{r:0.4,k:1.45},{r:0.5,k:1.35},{r:0.6,k:1.26},{r:0.7,k:1.19},{r:0.8,k:1.13},{r:0.9,k:1.08},{r:1,k:1.04},{r:1.1,k:1.02},{r:1.2,k:1.01}],
-        TRAFO_VALUES: [{ s: "25-160", ucc: 4, ur: "2.8-1.47" },{ s: "200-315", ucc: 4, ur: "1.4-1.23" },{ s: "400-630", ucc: 4, ur: "1.15-1.03" },{ s: "800-1250", ucc: 5, ur: "1.1-1.05" },{ s: "1600-2500", ucc: 6, ur: "1.0-1.05" }],
-        ICONS: {
-            TRANSFORMER: `<svg class="diagram-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="var(--line-color)" fill="none"><circle cx="32" cy="22" r="12"/><circle cx="32" cy="42" r="12"/></svg>`,
-            MOTOR: `<svg class="diagram-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g stroke-width="3" stroke="var(--line-color)" fill="none"><circle cx="32" cy="32" r="18"/><text x="25" y="42" font-family="Arial" font-size="24" font-weight="bold" fill="var(--line-color)">M</text></g></svg>`,
-            SWITCH: `<svg class="diagram-icon" style="height:28px" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g stroke="var(--line-color)" stroke-width="2.5"><line x1="32" y1="0" x2="32" y2="26"/><line x1="32" y1="38" x2="32" y2="64"/><line x1="22" y1="38" x2="42" y2="26"/></g></svg>`,
-            FAULT: `<svg class="diagram-fault-icon" viewBox="0 0 50 40"><path d="M5 20 L15 20 L20 10 L30 30 L35 20 L45 20" stroke="#ef4444" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M45 20 L40 15 M45 20 L40 25" stroke="#ef4444" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`
+        proyecto: {
+            service_l: getElement('proyecto_service_l').value,
+            service_d: getElement('proyecto_service_d').value,
+            service_manual_check: getElement('proyecto_service_manual_check').checked,
+            service_manual_input: getElement('proyecto_service_manual_input').value,
+            sectores: Array.from(document.querySelectorAll('.sector-card')).map(card => ({
+                id: card.id,
+                name: card.querySelector('.sector-name').value,
+                rcd: card.querySelector('.sector-rcd').value,
+                manualCheck: card.querySelector('.sector-manual-check').checked,
+                manualInput: card.querySelector('.sector-manual-input').value,
+                electrodeType: card.querySelector('.sector-electrode-type').value,
+                l: card.querySelector('.sector-l').value,
+                d: card.querySelector('.sector-d').value,
+            }))
         }
     };
+    localStorage.setItem('pat_calculator_state', JSON.stringify(state));
+}
 
-    let exportData = [];
-    const getById = id => document.getElementById(id);
+function loadState() {
+    const state = JSON.parse(localStorage.getItem('pat_calculator_state'));
+    if (!state) return;
 
-    // --- CREACIÓN DE NODOS DINÁMICOS ---
+    dom.mode_selector.value = state.mode || 'domiciliaria';
+    dom.ul_condition.value = state.ul || '24';
+    dom.tipoSuelo.value = state.tipoSuelo || '10';
+    dom.resistividadManual.value = state.resistividadManual || '';
+    dom.humedadTerreno.value = state.humedad || '1.0';
+    dom.resistividadManual.classList.toggle('hidden', dom.tipoSuelo.value !== 'custom');
 
-    function addFeederNode() {
-        const container = getById('transformerFeedersContainer');
-        const count = container.children.length + 1;
-        const id = `feeder-node-${Date.now()}`;
-        const feederDiv = document.createElement('div');
-        feederDiv.className = 'feeder-node';
-        feederDiv.id = id;
-        
-        const mtSectionOptions = CONSTS.CABLE_SECTIONS.filter(s => parseFloat(s) >= 16).map(s => `<option value="${s}" ${s === "35" ? "selected" : ""}>${s} mm²</option>`).join('');
+    // Domiciliaria
+    const domState = state.domiciliaria || {};
+    getElement('domiciliaria_rcd').value = domState.rcd || '30';
+    getElement('domiciliaria_manual_obj_check').checked = domState.manualCheck || false;
+    getElement('domiciliaria_manual_obj_input').value = domState.manualInput || '';
+    getElement('domiciliaria_manual_obj_input').classList.toggle('hidden', !domState.manualCheck);
+    getElement('domiciliaria_electrode_type').value = domState.electrodeType || 'jabalina_v';
+    getElement('domiciliaria_l').value = domState.l || '3';
+    getElement('domiciliaria_d').value = domState.d || '0.01905';
+    getElement('domiciliaria_h_l').value = domState.h_l || '10';
+    getElement('domiciliaria_h_p').value = domState.h_p || '0.5';
+    getElement('domiciliaria_placa_a').value = domState.placa_a || '1';
+    getElement('domiciliaria_placa_b').value = domState.placa_b || '1';
+    getElement('domiciliaria_malla_l').value = domState.malla_l || '5';
+    getElement('domiciliaria_malla_A').value = domState.malla_A || '4';
+    
+    // Proyecto
+    const proyState = state.proyecto || {};
+    getElement('proyecto_service_l').value = proyState.service_l || '3';
+    getElement('proyecto_service_d').value = proyState.service_d || '0.01905';
+    getElement('proyecto_service_manual_check').checked = proyState.service_manual_check || false;
+    getElement('proyecto_service_manual_input').value = proyState.service_manual_input || '1';
+    getElement('proyecto_service_manual_input').classList.toggle('hidden', !proyState.service_manual_check);
+    
+    dom.sectoresContainer.innerHTML = '';
+    sectorCount = 0;
+    if (proyState.sectores && proyState.sectores.length > 0) {
+        proyState.sectores.forEach(s => addSector(s));
+    }
+}
 
-        feederDiv.innerHTML = `
-            <div class="flex justify-between items-center mb-4">
-                <input type="text" value="Alimentador a Trafo #${count}" class="node-name-input text-2xl text-purple-700 data-input">
-                <button type="button" class="remove-btn text-red-500 hover:text-red-700 font-bold text-2xl" data-target="${id}">&times;</button>
+// --- CORE FUNCTIONS ---
+function handleModeChange() {
+    const selectedMode = dom.mode_selector.value;
+    document.querySelectorAll('.mode-section').forEach(el => el.style.display = 'none');
+    const modeElement = getElement(`mode_${selectedMode}`);
+    modeElement.style.display = 'block';
+
+    // *** FIX ***: When switching to Domiciliaria mode, ensure the correct electrode parameters are displayed.
+    if (selectedMode === 'domiciliaria') {
+        const selectedElectrode = getElement('domiciliaria_electrode_type').value;
+        handleElectrodeTypeChange('domiciliaria', selectedElectrode);
+    }
+
+    dom.resultsContainer.style.display = 'none';
+    dom.initialMessage.style.display = 'flex';
+    dom.calcularBtn.textContent = selectedMode === 'proyecto' ? 'Calcular Proyecto Completo' : 'Verificar Puesta a Tierra';
+    saveState();
+}
+
+function handleElectrodeTypeChange(prefix, type, card) {
+    const container = card || document;
+    container.querySelectorAll(`[id^=${prefix}_][id$=_params]`).forEach(el => el.style.display = 'none');
+    const selectedParams = container.querySelector(`#${prefix}_${type}_params`);
+    if (selectedParams) selectedParams.style.display = 'block';
+}
+
+function addSector(data = {}) {
+    sectorCount++;
+    const sectorId = data.id || `sector-${sectorCount}`;
+    const newSector = document.createElement('div');
+    newSector.className = 'sector-card bg-gray-700 p-4 rounded-lg border border-gray-600';
+    newSector.id = sectorId;
+    newSector.innerHTML = `
+        <div class="flex justify-between items-center mb-3">
+            <h4 class="font-semibold text-white">Sector de Protección #${sectorCount}</h4>
+            <button onclick="removeSector('${sectorId}')" class="text-gray-500 hover:text-red-400 text-2xl leading-none">&times;</button>
+        </div>
+        <div class="space-y-3">
+            <input type="text" placeholder="Nombre (Ej: Taller)" class="sector-name w-full bg-gray-600 border border-gray-500 rounded-md px-3 py-1.5 text-sm" value="${data.name || `Sector ${sectorCount}`}">
+            <div>
+                <label class="text-xs text-gray-400">Sensibilidad Diferencial (IΔn)</label>
+                <select class="sector-rcd w-full bg-gray-600 border border-gray-500 rounded-md px-3 py-1.5 mt-1 text-sm">
+                    <option value="30">30 mA</option><option value="100">100 mA</option><option value="300">300 mA</option>
+                    <option value="500">500 mA</option><option value="1000">1 A</option><option value="3000">3 A</option>
+                </select>
             </div>
-            <div class="section-divider">
-                <h4 class="text-xl font-semibold mb-4 text-gray-700">2. Cable de Media Tensión</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                    <div class="input-group"><label>Longitud [m]</label><input type="number" value="50" class="cable-length-mt data-input" min="0"></div>
-                    <div class="input-group"><label>Sección</label><select class="cable-section-area-mt data-input">${mtSectionOptions}</select></div>
-                    <div class="input-group"><label>Material</label><select class="cable-material-mt data-input"><option value="cobre" selected>Cobre</option><option value="aluminio">Aluminio</option></select></div>
-                    <div class="input-group"><label>Tipo</label><select class="cable-type-mt data-input"><option value="tripolar" selected>Tripolar</option><option value="unipolar">3 Unipolares</option></select></div>
-                </div>
-            </div>
-            <div class="section-divider">
-                <h4 class="text-xl font-semibold mb-4 text-gray-800">3. Transformador MT/BT</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                    <div class="input-group"><label>Potencia [kVA]</label><input type="number" value="630" min="1" class="power data-input"></div>
-                    <div class="input-group"><label>Tensión Sec. [V]</label><input type="number" value="400" min="1" class="voltage data-input"></div>
-                    <div class="input-group"><label>Ucc (%)</label><input type="number" value="4" min="0.1" step="any" class="impedance data-input"></div>
-                    <div class="input-group"><label>Ur (%)</label><input type="number" value="1.1" min="0.1" step="any" class="ur_percent data-input"></div>
-                </div>
+             <div class="mt-2">
+                <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                    <input type="checkbox" class="sector-manual-check form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-500 rounded">
+                    <span>Usar objetivo manual</span>
+                </label>
+                <input type="number" class="sector-manual-input w-full bg-gray-600 border-gray-500 rounded-md px-3 py-1.5 mt-2 hidden" placeholder="Ej: 5 Ω">
             </div>
             <div>
-                <h4 class="text-xl font-semibold mb-4 text-gray-800">4. Estructura de Circuitos en BT</h4>
-                <div class="circuitTreeContainer"></div>
-                <div class="mt-4">
-                    <button type="button" class="add-trunk-btn btn btn-sm bg-blue-600 hover:bg-blue-700 text-white w-full">Agregar Troncal BT</button>
+                <label class="text-xs text-gray-400">Tipo de Electrodo</label>
+                <select class="sector-electrode-type w-full bg-gray-600 border border-gray-500 rounded-md px-3 py-1.5 mt-1 text-sm">
+                     <option value="jabalina_v" selected>Jabalina Vertical</option>
+                </select>
+            </div>
+            <div class="sector-l-d-params">
+                 <label class="text-xs text-gray-400">Jabalina del Sector</label>
+                <div class="grid grid-cols-2 gap-2 mt-1">
+                    <select class="sector-l w-full bg-gray-600 border border-gray-500 rounded-md px-3 py-1.5 text-sm"><option value="1.5">1.5m</option><option value="3" selected>3m</option></select>
+                    <select class="sector-d w-full bg-gray-600 border border-gray-500 rounded-md px-3 py-1.5 text-sm"><option value="0.0127">1/2"</option><option value="0.0158">5/8"</option><option value="0.01905" selected>3/4"</option></select>
                 </div>
             </div>
-        `;
-        container.appendChild(feederDiv);
-        calculateAndDisplaySC();
-    }
-
-    function addCableNode(container) {
-        const id = `cable-node-${Date.now()}`;
-        const nodeDiv = document.createElement('div');
-        nodeDiv.className = 'cable-node';
-        nodeDiv.id = id;
-
-        const title = container.classList.contains('circuitTreeContainer') ? `Troncal BT #${container.children.length + 1}` : `Derivación #${container.children.length + 1}`;
-        let sectionOptions = CONSTS.CABLE_SECTIONS.map(s => `<option value="${s}" ${s === "95" ? "selected" : ""}>${s} mm²</option>`).join('');
-        
-        nodeDiv.innerHTML = `
-            <div class="node-content">
-                <div class="flex justify-between items-center mb-4"><input type="text" value="${title}" class="node-name-input font-semibold text-gray-800 data-input"><button type="button" class="remove-btn text-red-500 hover:text-red-700 font-bold text-2xl" data-target="${id}">&times;</button></div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4">
-                    <div class="input-group"><label>Sección</label><select class="cable-section-area-sc data-input">${sectionOptions}</select></div>
-                    <div class="input-group"><label>Longitud [m]</label><input type="number" value="20" min="0" class="cable-length-sc data-input"></div>
-                    <div class="input-group"><label>Material</label><select class="cable-material-sc data-input"><option value="cobre" selected>Cobre</option><option value="aluminio">Aluminio</option></select></div>
-                    <div class="input-group"><label>Aislación</label><select class="cable-insulation-sc data-input"><option value="xlpe" selected>XLPE</option><option value="pvc">PVC</option></select></div>
-                    <div class="input-group"><label>Tipo</label><select class="cable-type-sc data-input"><option value="tripolar" selected>Tripolar</option><option value="unipolar">3 Unipolares</option></select></div>
-                    <div class="input-group"><label>Tiempo Despeje [s]</label><input type="number" value="0.1" min="0.01" step="0.01" class="protection-time-sc data-input"></div>
-                    <div class="input-group"><label>Norma Cable</label><select class="cable-standard-sc data-input"><option value="2178" selected>IRAM 2178</option><option value="247">IRAM 247-3</option></select></div>
-                    <div class="input-group"><label>Tipo de Tendido</label><select class="cable-install-sc data-input"><option value="B1">B1</option><option value="B2" selected>B2</option><option value="C">C</option><option value="E">E</option><option value="F">F</option><option value="G">G</option></select></div>
-                </div>
-                <div class="mt-2 p-3 bg-indigo-50 rounded-lg">
-                     <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" class="motor-contribution-cb data-input form-checkbox h-5 w-5 text-indigo-600">
-                        <span class="text-sm font-medium text-gray-700">Aporte de Motor al CC</span>
-                    </label>
-                    <div class="motor-input-container hidden mt-2">
-                        <div class="input-group !mb-0"><label>In Motor [A]</label><input type="number" value="100" min="0" class="motor-in-sc data-input"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="node-actions"><button type="button" class="add-branch-btn btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white">Agregar Derivación</button></div>
-            <div class="children-container"></div>
-        `;
-        container.appendChild(nodeDiv);
-        calculateAndDisplaySC();
-    }
-
-    // --- LÓGICA DE CÁLCULO PRINCIPAL ---
-
-    function calculateAndDisplaySC() {
-        let calculationLog = [];
-        const resultsContent = getById('resultsContentSC');
-        resultsContent.innerHTML = '';
-        exportData = [];
-
-        const Scc_red_mva = parseFloat(getById('sccRed').value) || 0;
-        const U_red_kv = parseFloat(getById('tensionRed').value) || 0;
-        
-        if (!Scc_red_mva || !U_red_kv || getById('transformerFeedersContainer').children.length === 0) {
-            getById('resultsPlaceholderSC').style.display = 'block';
-            resultsContent.style.display = 'none';
-            getById('diagramCard').style.display = 'none';
-            displayCalculationLog([]);
-            return;
-        }
-        
-        getById('resultsPlaceholderSC').style.display = 'none';
-        resultsContent.style.display = 'block';
-        getById('diagramCard').style.display = 'block';
-
-        const Z_red_ohm = (1.1 * U_red_kv ** 2) / Scc_red_mva;
-        const X_red_ohm = Z_red_ohm / 1.005; 
-        const R_red_ohm = X_red_ohm * 0.1;
-        addSCResult("Acometida de Red (MT)", U_red_kv * 1000, R_red_ohm, X_red_ohm);
-        calculationLog.push(`<strong>1. Acometida MT:</strong> Z_red = (1.1 * ${U_red_kv}² kV) / ${Scc_red_mva} MVA = ${Z_red_ohm.toFixed(5)} Ω`);
-        
-        document.querySelectorAll('.feeder-node').forEach((feederNode, index) => {
-            const feederName = feederNode.querySelector('.node-name-input').value || `Alimentador #${index + 1}`;
-            calculationLog.push(`<strong class="text-purple-700 mt-4 block border-t pt-4">--- INICIO CÁLCULO ${feederName.toUpperCase()} ---</strong>`);
-            
-            const S_tr_kva = parseFloat(feederNode.querySelector('.power').value) || 0;
-            const U_tr_v = parseFloat(feederNode.querySelector('.voltage').value) || 0;
-            const Zcc_tr_percent = parseFloat(feederNode.querySelector('.impedance').value) || 0;
-            const Ur_tr_percent = parseFloat(feederNode.querySelector('.ur_percent').value) || 0;
-
-            if (!S_tr_kva || !U_tr_v || !Zcc_tr_percent || !Ur_tr_percent) return;
-
-            let R_cable_mt = 0, X_cable_mt = 0;
-            const length_mt_m = parseFloat(feederNode.querySelector('.cable-length-mt').value) || 0;
-            if (length_mt_m > 0) {
-                const area_mt = feederNode.querySelector('.cable-section-area-mt').value;
-                const type_mt = feederNode.querySelector('.cable-type-mt').value;
-                const material_mt = feederNode.querySelector('.cable-material-mt').value;
-                const insulation_mt = "xlpe"; // Se asume XLPE para MT
-                const r_km = CONSTS.CABLE_RESISTANCE[material_mt]?.[insulation_mt]?.[area_mt] || 0;
-                const x_km = CONSTS.CABLE_REACTANCE[type_mt]?.[area_mt] || 0;
-                R_cable_mt = r_km * (length_mt_m / 1000);
-                X_cable_mt = x_km * (length_mt_m / 1000);
-            }
-            calculationLog.push(`<strong>2. Cable MT (${feederName}):</strong> R=${R_cable_mt.toFixed(5)}, X=${X_cable_mt.toFixed(5)}`);
-            
-            const R_total_mt = R_red_ohm + R_cable_mt;
-            const X_total_mt = X_red_ohm + X_cable_mt;
-            addSCResult(`${feederName} - Bornes MT Trafo`, U_red_kv * 1000, R_total_mt, X_total_mt);
-            
-            const transform_ratio = (U_red_kv * 1000) / U_tr_v;
-            const R_mt_ref_bt = R_total_mt / (transform_ratio ** 2);
-            const X_mt_ref_bt = X_total_mt / (transform_ratio ** 2);
-            calculationLog.push(`<strong>3. Ref. a BT (${feederName}):</strong> R_ref = ${R_total_mt.toFixed(5)} / ${transform_ratio.toFixed(2)}² = ${R_mt_ref_bt.toFixed(5)}`);
-            
-            const R_tr_ohm = (Ur_tr_percent / 100) * (U_tr_v ** 2) / (S_tr_kva * 1000);
-            const Ux_tr_percent = Math.sqrt(Math.max(0, Zcc_tr_percent**2 - Ur_tr_percent**2));
-            const X_tr_ohm = (Ux_tr_percent / 100) * (U_tr_v ** 2) / (S_tr_kva * 1000);
-            calculationLog.push(`<strong>4. Impedancia Trafo (${feederName}):</strong> R_tr=${R_tr_ohm.toFixed(5)}, X_tr=${X_tr_ohm.toFixed(5)}`);
-
-            const R_base_bt = R_mt_ref_bt + R_tr_ohm;
-            const X_base_bt = X_mt_ref_bt + X_tr_ohm;
-            addSCResult(`${feederName} - Bornes BT Trafo`, U_tr_v, R_base_bt, X_base_bt);
-            calculationLog.push(`<strong>5. Total en Bornes BT (${feederName}):</strong> R_total=${R_base_bt.toFixed(5)}, X_total=${X_base_bt.toFixed(5)}`);
-            
-            feederNode.querySelector('.circuitTreeContainer').querySelectorAll(':scope > .cable-node').forEach((node) => {
-                recursiveCalculate(node, `${feederName} @ Bornes BT`, R_base_bt, X_base_bt, calculationLog, U_tr_v);
-            });
-        });
-        displayCalculationLog(calculationLog);
-        drawDiagram();
-    }
+        </div>`;
     
-    function recursiveCalculate(nodeElement, parentName, parentR, parentX, log, voltage) {
-        const area = nodeElement.querySelector('.cable-section-area-sc').value;
-        const length_m = parseFloat(nodeElement.querySelector('.cable-length-sc').value) || 0;
-        const material = nodeElement.querySelector('.cable-material-sc').value;
-        const insulation = nodeElement.querySelector('.cable-insulation-sc').value;
-        const type = nodeElement.querySelector('.cable-type-sc').value;
-        const t = parseFloat(nodeElement.querySelector('.protection-time-sc').value) || 0.1;
-
-        const r_km = CONSTS.CABLE_RESISTANCE[material]?.[insulation]?.[area] || 0;
-        const x_km = CONSTS.CABLE_REACTANCE[type]?.[area] || 0;
-        const R_cable = r_km * (length_m / 1000);
-        const X_cable = x_km * (length_m / 1000);
-
-        const R_total_at_node = parentR + R_cable;
-        const X_total_at_node = parentX + X_cable;
-        const Z_total = Math.sqrt(R_total_at_node**2 + X_total_at_node**2);
-        const Icc_source = Z_total > 0 ? (voltage / (Math.sqrt(3) * Z_total)) : 0;
-        
-        let Icc_from_downstream_motors = 0;
-        const motorCb = nodeElement.querySelector('.motor-contribution-cb');
-        if (motorCb && motorCb.checked) {
-            const motorIn = parseFloat(nodeElement.querySelector('.motor-in-sc').value) || 0;
-            Icc_from_downstream_motors += motorIn * 5;
-        }
-
-        const childrenContainer = nodeElement.querySelector('.children-container');
-        childrenContainer.querySelectorAll(':scope > .cable-node').forEach((childNode) => {
-            Icc_from_downstream_motors += recursiveCalculate(childNode, nodeElement.querySelector('.node-name-input').value, R_total_at_node, X_total_at_node, log, voltage);
-        });
-        
-        const Icc_total_through_cable = Icc_source + Icc_from_downstream_motors;
-
-        const k_icc = CONSTS.K_FACTOR_CC[material]?.[insulation] || 0;
-        const I_adm_cc = (k_icc * parseFloat(area)) / Math.sqrt(t);
-        const passes = I_adm_cc >= Icc_total_through_cable;
-
-        const sectionSelect = nodeElement.querySelector('.cable-section-area-sc');
-        sectionSelect.classList.toggle('input-error', !passes);
-
-        const nodeTitle = nodeElement.querySelector('.node-name-input').value;
-        const pointName = `${parentName} → ${nodeTitle}`;
-
-        addSCResult(pointName, voltage, R_total_at_node, X_total_at_node, { 
-            I_adm_cc, Icc_source, Icc_motor: Icc_from_downstream_motors, Icc_total: Icc_total_through_cable, passes 
-        });
-        log.push(`<strong>Punto ${nodeTitle}:</strong> R_cable=${R_cable.toFixed(5)}, X_cable=${X_cable.toFixed(5)}<br>↳ R_total=${R_total_at_node.toFixed(5)}, X_total=${X_total_at_node.toFixed(5)}`);
-        
-        return Icc_from_downstream_motors;
+    // Set values from data if available
+    if (data.rcd) newSector.querySelector('.sector-rcd').value = data.rcd;
+    if (data.manualCheck) {
+        newSector.querySelector('.sector-manual-check').checked = true;
+        newSector.querySelector('.sector-manual-input').value = data.manualInput || '';
+        newSector.querySelector('.sector-manual-input').classList.remove('hidden');
     }
+    if(data.electrodeType) newSector.querySelector('.sector-electrode-type').value = data.electrodeType;
+    if(data.l) newSector.querySelector('.sector-l').value = data.l;
+    if(data.d) newSector.querySelector('.sector-d').value = data.d;
 
-    // --- FUNCIONES DE VISUALIZACIÓN Y UTILIDADES ---
 
-    function addSCResult(pointName, voltage_v, R_total, X_total, verification) {
-        const Z_total = Math.sqrt(R_total**2 + X_total**2);
-        const Icc_source = verification ? verification.Icc_source : (Z_total > 0 ? (voltage_v / (Math.sqrt(3) * Z_total)) : 0);
-        const ratio_RX = X_total > 0 ? (R_total / X_total) : 0;
-        const kappa = getKappaFactor(ratio_RX);
-        const Is = kappa * Math.sqrt(2) * Icc_source;
-
-        let verificationHTML = '';
-        if (verification) {
-            const { I_adm_cc, Icc_motor, Icc_total, passes } = verification;
-            const resultClass = passes ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-            verificationHTML = `
-                <div class="result-item text-sm"><span>Icc Aporte Red:</span><span class="font-bold">${(Icc_source / 1000).toFixed(2)} kA</span></div>
-                <div class="result-item text-sm"><span>Icc Aporte Motores:</span><span class="font-bold">${(Icc_motor / 1000).toFixed(2)} kA</span></div>
-                <div class="result-item"><span>Icc Total (para verificación):</span><span class="font-bold text-lg text-blue-600">${(Icc_total / 1000).toFixed(2)} kA</span></div>
-                <div class="mt-4 p-3 rounded-lg text-center font-bold text-lg ${resultClass}">
-                    Verificación por Cortocircuito (Efecto Térmico): ${passes ? 'VERIFICA' : 'NO VERIFICA'}
-                </div>
-                <div class="text-xs text-center mt-1 text-gray-600">
-                    Iadm_cc: ${(I_adm_cc / 1000).toFixed(2)} kA vs. Icc Total: ${(Icc_total / 1000).toFixed(2)} kA
-                </div>
-            `;
-        }
-
-        const resultDiv = document.createElement('div');
-        resultDiv.className = 'result-card';
-        resultDiv.innerHTML = `<h4 class="text-lg font-semibold text-indigo-600 mb-3">${pointName}</h4>
-            <div class="result-item"><span>Icc en Punto (aporte red):</span><span class="font-bold text-xl text-red-600">${(Icc_source / 1000).toFixed(2)} kA</span></div>
-            <div class="result-item"><span>Corriente de Impulso (Is):</span><span class="font-bold text-xl text-purple-600">${(Is / 1000).toFixed(2)} kA</span></div>
-            ${verificationHTML}
-            <details class="mt-2 text-sm"><summary>Ver detalles de impedancia</summary><div class="log-box">Z_total: ${Z_total.toFixed(5)} Ω<br>R_total: ${R_total.toFixed(5)} Ω<br>X_total: ${X_total.toFixed(5)} Ω<br>R/X: ${ratio_RX.toFixed(3)}<br>Factor χ: ${kappa.toFixed(3)}</div></details>`;
-        getById('resultsContentSC').appendChild(resultDiv);
-        
-        exportData.push({
-            pointName, icc_source: (Icc_source / 1000).toFixed(2), is: (Is / 1000).toFixed(2), z: Z_total.toFixed(5), r: R_total.toFixed(5), x: X_total.toFixed(5), rx: ratio_RX.toFixed(3), kappa: kappa.toFixed(3), i_adm_cc: verification ? (verification.I_adm_cc/1000).toFixed(2) : 'N/A', icc_motor: verification ? (verification.Icc_motor/1000).toFixed(2) : 'N/A', icc_total: verification ? (verification.Icc_total/1000).toFixed(2) : 'N/A', verifica: verification ? (verification.passes ? 'SI' : 'NO') : 'N/A' 
-        });
-    }
+    newSector.querySelector('.sector-manual-check').addEventListener('change', (e) => {
+        e.target.closest('div').querySelector('.sector-manual-input').classList.toggle('hidden', !e.target.checked);
+        saveState();
+    });
     
-    function displayCalculationLog(log) {
-        const container = getById('calculationLogContainer');
-        container.innerHTML = log.length ? log.map(e => `<div class="calculation-log-entry">${e}</div>`).join('') : '<p class="text-gray-500 p-4 text-center">El detalle del cálculo aparecerá aquí.</p>';
-    }
+    // In project mode, only jabalina_v is supported for simplicity in this version.
+    newSector.querySelector('.sector-electrode-type').disabled = true;
 
-    function getKappaFactor(ratio) {
-        if (isNaN(ratio)) return 1.0; const table = CONSTS.KAPPA_TABLE; if (ratio <= table[0].r) return table[0].k; if (ratio >= table[table.length - 1].r) return 1.0;
-        for (let i = 0; i < table.length - 1; i++) { if (ratio >= table[i].r && ratio < table[i+1].r) { const l = table[i], u = table[i+1]; return l.k + ((ratio - l.r) / (u.r - l.r)) * (u.k - l.k); } } return 1.0;
-    }
+    dom.sectoresContainer.appendChild(newSector);
+    // Add listeners to new elements
+    newSector.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('change', saveState);
+        el.addEventListener('keyup', saveState);
+    });
+}
 
-    function populateAnnexTables() {
-        const createTable = (data, headers) => `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${data.map(row => `<tr>${Object.values(row).map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>`;
-        if(getById('kappaTable')) getById('kappaTable').innerHTML = createTable(CONSTS.KAPPA_TABLE, ['R/X', 'Factor χ']);
-        if(getById('trafoTable')) getById('trafoTable').innerHTML = createTable(CONSTS.TRAFO_VALUES, ['S [kVA]', 'Ucc [%]', 'Ur [%]']);
-    }
-    
-    // --- DIAGRAMA UNIFILAR ---
-
-    function drawDiagram() {
-        const diagramContainer = getById('diagramContainer');
-        diagramContainer.innerHTML = ''; 
-        diagramContainer.className = 'diagram-container';
-
-        const busbarMT = document.createElement('div');
-        busbarMT.className = 'diagram-bus';
-        diagramContainer.appendChild(busbarMT);
-        
-        const feedersContainer = document.createElement('div');
-        feedersContainer.className = 'diagram-children-wrapper';
-        diagramContainer.appendChild(feedersContainer);
-
-        document.querySelectorAll('.feeder-node').forEach(feederNode => {
-            const feederBranch = document.createElement('div');
-            feederBranch.className = 'diagram-branch';
-            feedersContainer.appendChild(feederBranch);
-
-            const switchWrapper = document.createElement('div');
-            switchWrapper.className = 'diagram-icon-wrapper';
-            switchWrapper.innerHTML = `<div class="diagram-line-through"></div><div class="diagram-icon">${CONSTS.ICONS.SWITCH}</div>`;
-            feederBranch.appendChild(switchWrapper);
-            
-            const length_mt_m = feederNode.querySelector('.cable-length-mt').value;
-            if (length_mt_m > 0) {
-                const cableSegment = document.createElement('div');
-                cableSegment.className = 'diagram-icon-wrapper';
-                cableSegment.innerHTML = `<div class="diagram-line-through"></div><span class="diagram-label">Cable MT</span>`;
-                feederBranch.appendChild(cableSegment);
-            }
-
-            const trafoPower = feederNode.querySelector('.power').value;
-            const trafoWrapper = document.createElement('div');
-            trafoWrapper.className = 'diagram-icon-wrapper';
-            trafoWrapper.innerHTML = `<div class="diagram-line-through"></div>
-                                      <div class="diagram-icon">${CONSTS.ICONS.TRANSFORMER}</div>
-                                      ${CONSTS.ICONS.FAULT}`;
-            feederBranch.appendChild(trafoWrapper);
-            feederBranch.innerHTML += `<span class="diagram-label">${trafoPower} kVA</span>`;
-            
-            feederBranch.innerHTML += `<div class="diagram-line" style="height: 20px;"></div>`;
-
-            const busbarBT = document.createElement('div');
-            busbarBT.className = 'diagram-bus';
-            feederBranch.appendChild(busbarBT);
-
-            const btTrunksContainer = document.createElement('div');
-            btTrunksContainer.className = 'diagram-children-wrapper';
-            feederBranch.appendChild(btTrunksContainer);
-
-            const circuitTreeContainer = feederNode.querySelector('.circuitTreeContainer');
-            circuitTreeContainer.querySelectorAll(':scope > .cable-node').forEach(node => {
-                recursiveDrawNode(node, btTrunksContainer);
-            });
-        });
-    }
-
-    function recursiveDrawNode(nodeElement, parentDiagramContainer) {
-        const branchContainer = document.createElement('div');
-        branchContainer.className = 'diagram-branch';
-        parentDiagramContainer.appendChild(branchContainer);
-
-        branchContainer.innerHTML += `<div class="diagram-line" style="height: 20px;"></div>`;
-        
-        const switchWrapper = document.createElement('div');
-        switchWrapper.className = 'diagram-icon-wrapper';
-        switchWrapper.innerHTML = `<div class="diagram-line-through"></div><div class="diagram-icon">${CONSTS.ICONS.SWITCH}</div>`;
-        branchContainer.appendChild(switchWrapper);
-        
-        const cableName = nodeElement.querySelector('.node-name-input').value;
-        
-        const cableSegment = document.createElement('div');
-        cableSegment.className = 'diagram-icon-wrapper';
-        cableSegment.innerHTML = `
-            <div class="diagram-line-through"></div>
-            <div class="flex items-center">
-                <span class="diagram-label">${cableName}</span>
-                ${CONSTS.ICONS.FAULT}
-            </div>
-        `;
-        branchContainer.appendChild(cableSegment);
-
-        const childrenContainer = nodeElement.querySelector('.children-container');
-        const childrenNodes = childrenContainer.querySelectorAll(':scope > .cable-node');
-        const isMotorLoad = nodeElement.querySelector('.motor-contribution-cb').checked;
-
-        if (childrenNodes.length > 0) {
-            branchContainer.innerHTML += `<div class="diagram-line" style="height: 20px;"></div>`;
-            const busbar = document.createElement('div');
-            busbar.className = 'diagram-bus';
-            branchContainer.appendChild(busbar);
-
-            const newParentContainer = document.createElement('div');
-            newParentContainer.className = 'diagram-children-wrapper';
-            branchContainer.appendChild(newParentContainer);
-
-            childrenNodes.forEach(childNode => {
-                recursiveDrawNode(childNode, newParentContainer);
-            });
-        } else if (isMotorLoad) {
-            branchContainer.innerHTML += `<div class="diagram-line" style="height: 20px;"></div>`;
-            const motorWrapper = document.createElement('div');
-            motorWrapper.className = 'diagram-icon-wrapper';
-            motorWrapper.innerHTML = `<div class="diagram-line-through"></div><div class="diagram-icon">${CONSTS.ICONS.MOTOR}</div>`;
-            branchContainer.appendChild(motorWrapper);
-        }
-    }
-
-
-    // --- EXPORTACIÓN Y OTROS ---
-
-    function handleExportSC() {
-        if (exportData.length === 0) { alert("No hay datos para exportar."); return; }
-        const headers = ["Punto de Falla", "Icc Red (kA)", "Icc Motores (kA)", "Icc Total Verif. (kA)", "Is (kA)", "Iadm_cc (kA)", "Verifica Icc?", "Z_total (Ω)", "R_total (Ω)", "X_total (Ω)", "R/X", "Factor χ"];
-        const rows = [headers, ...exportData.map(d => [d.pointName, d.icc_source, d.icc_motor, d.icc_total, d.is, d.i_adm_cc, d.verifica, d.z, d.r, d.x, d.rx, d.kappa])];
-        const processRow = row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(';');
-        const csvContent = "data:text/csv;charset=utf-8," + rows.map(processRow).join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", 'resultados_cortocircuito_v22.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function handleExportWord() {
-        if (exportData.length === 0) { alert("No hay datos para exportar."); return; }
-        let html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>";
-        html += "<head><meta charset='utf-8'><title>Resultados de Cortocircuito</title>";
-        html += "<style> body{font-family: Arial, sans-serif;} table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; text-align: center;} th { background-color: #f2f2f2; } </style>";
-        html += "</head><body>";
-        html += "<h1>Resultados del Cálculo de Cortocircuito</h1>";
-        html += "<table width='100%'><thead><tr>";
-        const headers = ["Punto", "Icc Red (kA)", "Icc Motores (kA)", "Icc Total (kA)", "Is (kA)", "Iadm_cc (kA)", "Verifica?", "Z (Ω)", "R (Ω)", "X (Ω)"];
-        headers.forEach(h => html += `<th>${h}</th>`);
-        html += "</tr></thead><tbody>";
-        exportData.forEach(d => {
-            html += `<tr>
-                        <td>${d.pointName}</td>
-                        <td>${d.icc_source}</td>
-                        <td>${d.icc_motor}</td>
-                        <td>${d.icc_total}</td>
-                        <td>${d.is}</td>
-                        <td>${d.i_adm_cc}</td>
-                        <td style="background-color:${d.verifica === 'SI' ? '#dcfce7' : '#fee2e2'};">${d.verifica}</td>
-                        <td>${d.z}</td>
-                        <td>${d.r}</td>
-                        <td>${d.x}</td>
-                     </tr>`;
-        });
-        html += "</tbody></table></body></html>";
-        
-        const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-        const url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html);
-        const downloadLink = document.createElement("a");
-        document.body.appendChild(downloadLink);
-        downloadLink.href = url;
-        downloadLink.download = 'resultados_cortocircuito_v22.doc';
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-    }
-
-    function toggleFullscreen() {
-        const elem = document.documentElement;
-        if (!document.fullscreenElement) {
-            elem.requestFullscreen().catch(err => { alert(`Error: ${err.message}`); });
-        } else {
-            document.exitFullscreen();
-        }
-    }
-    
-    // --- INICIALIZACIÓN Y MANEJO DE EVENTOS ---
-    
-    function init() {
-        populateAnnexTables();
-        getById('addFeederBtn').addEventListener('click', addFeederNode);
-        getById('resetButtonSC').addEventListener('click', () => {
-            getById('transformerFeedersContainer').innerHTML = '';
-            calculateAndDisplaySC();
-        });
-        getById('exportSCBtn').addEventListener('click', handleExportSC);
-        getById('exportWordBtn').addEventListener('click', handleExportWord);
-        
-        document.addEventListener('fullscreenchange', () => {
-            const isFullscreen = !!document.fullscreenElement;
-        });
-
-        getById('shortCircuitForm').addEventListener('input', e => {
-            if (e.target.classList.contains('data-input')) {
-                 if (e.target.type === 'checkbox' && e.target.classList.contains('motor-contribution-cb')) {
-                    const container = e.target.closest('.node-content').querySelector('.motor-input-container');
-                    container.classList.toggle('hidden', !e.target.checked);
-                }
-                calculateAndDisplaySC();
-            }
-        });
-        
-        getById('shortCircuitForm').addEventListener('click', e => {
-            if (e.target.classList.contains('remove-btn')) {
-                getById(e.target.dataset.target)?.remove();
-                calculateAndDisplaySC();
-            } else if (e.target.classList.contains('add-branch-btn')) {
-                const parentNode = e.target.closest('.cable-node');
-                const childrenContainer = parentNode.querySelector('.children-container');
-                addCableNode(childrenContainer);
-            } else if (e.target.classList.contains('add-trunk-btn')) {
-                 const feederNode = e.target.closest('.feeder-node');
-                 const container = feederNode.querySelector('.circuitTreeContainer');
-                 addCableNode(container);
-            }
-        });
-
-        // Eventos para el modal del diagrama
-        const diagramModal = getById('diagramModal');
-        getById('fullscreenDiagramBtn').addEventListener('click', () => {
-            getById('diagramModalContent').innerHTML = getById('diagramContainer').outerHTML;
-            diagramModal.style.display = 'flex';
-        });
-        getById('closeDiagramModal').addEventListener('click', () => {
-            diagramModal.style.display = 'none';
-        });
-        diagramModal.addEventListener('click', (e) => {
-            if (e.target === diagramModal) {
-                diagramModal.style.display = 'none';
-            }
-        });
-
-        calculateAndDisplaySC();
-    }
-    
-    init();
+getElement('domiciliaria_manual_obj_check').addEventListener('change', (e) => {
+    getElement('domiciliaria_manual_obj_input').classList.toggle('hidden', !e.target.checked);
+    saveState();
 });
+getElement('proyecto_service_manual_check').addEventListener('change', (e) => {
+    getElement('proyecto_service_manual_input').classList.toggle('hidden', !e.target.checked);
+    saveState();
+});
+
+function removeSector(sectorId) { 
+    getElement(sectorId).remove(); 
+    saveState();
+}
+
+function getInputs() {
+    const resistividadBase = dom.tipoSuelo.value === 'custom' ? parseFloat(dom.resistividadManual.value) : parseFloat(dom.tipoSuelo.value);
+    const humedadFactor = parseFloat(dom.humedadTerreno.value);
+    const resistividadFinal = resistividadBase * humedadFactor;
+
+    const mode = dom.mode_selector.value;
+    const baseParams = { 
+        mode, 
+        ul: dom.ul_condition.value, 
+        resistividad: isNaN(resistividadFinal) ? 0 : resistividadFinal 
+    };
+
+    if (mode === 'proyecto') {
+        baseParams.sectores = Array.from(document.querySelectorAll('.sector-card')).map(card => ({
+            name: card.querySelector('.sector-name').value,
+            rcd: card.querySelector('.sector-rcd').value,
+            l: parseFloat(card.querySelector('.sector-l').value),
+            d: parseFloat(card.querySelector('.sector-d').value),
+            manualCheck: card.querySelector('.sector-manual-check').checked,
+            manualInput: parseFloat(card.querySelector('.sector-manual-input').value),
+            electrodeType: 'jabalina_v' // Hardcoded for project sectors in this version
+        }));
+        baseParams.service = {
+             l: parseFloat(getElement('proyecto_service_l').value),
+             d: parseFloat(getElement('proyecto_service_d').value),
+             manualCheck: getElement('proyecto_service_manual_check').checked,
+             manualInput: parseFloat(getElement('proyecto_service_manual_input').value)
+        };
+    } else {
+        baseParams.domiciliaria = {
+            rcd: getElement('domiciliaria_rcd').value,
+            manualCheck: getElement('domiciliaria_manual_obj_check').checked,
+            manualInput: parseFloat(getElement('domiciliaria_manual_obj_input').value),
+            electrodeType: getElement('domiciliaria_electrode_type').value,
+            l: parseFloat(getElement('domiciliaria_l').value),
+            d: parseFloat(getElement('domiciliaria_d').value),
+            h_l: parseFloat(getElement('domiciliaria_h_l').value),
+            h_p: parseFloat(getElement('domiciliaria_h_p').value),
+            placa_a: parseFloat(getElement('domiciliaria_placa_a').value),
+            placa_b: parseFloat(getElement('domiciliaria_placa_b').value),
+            malla_l: parseFloat(getElement('domiciliaria_malla_l').value),
+            malla_A: parseFloat(getElement('domiciliaria_malla_A').value),
+        };
+    }
+    return baseParams;
+}
+
+function getPatObjective(rcd, ul, manualCheck, manualValue) {
+    if(manualCheck && !isNaN(manualValue) && manualValue > 0) return manualValue;
+    const calculated_ra = DB.aeaTable[ul]?.[rcd] || Infinity;
+    const capped_ra = DB.aeaFinalCap[rcd] || calculated_ra;
+    return Math.min(calculated_ra, capped_ra);
+}
+
+// --- CALCULATION FUNCTIONS ---
+function calculateJabalinaVertical(resistividad, L, d) {
+    if (L <= 0 || d <= 0) return Infinity;
+    // Formula from "apunte 4 massa.pdf", page 20.
+    return (resistividad / (2 * Math.PI * L)) * Math.log((4 * L / d) - 1);
+}
+
+function calculateJabalinaHorizontal(resistividad, L, p) {
+    if (L <= 0 || p <= 0) return Infinity;
+    // Simplified formula for horizontal conductor
+    return (resistividad / (2 * Math.PI * L)) * (Math.log((4 * L * L) / p) - 1);
+}
+
+function calculatePlaca(resistividad, a, b) {
+    if (a <= 0 || b <= 0) return Infinity;
+    // Simplified formula for rectangular plate (Schwarz)
+    const P = 2 * (a + b); // Perimeter
+    return (resistividad / P) * (Math.PI / 2);
+}
+
+function calculateMalla(resistividad, L_total, Area) {
+    if (L_total <= 0 || Area <= 0) return Infinity;
+    // Dwight's formula (simplified)
+    return resistividad * ((1 / L_total) + (1 / Math.sqrt(20 * Area)));
+}
+
+function calculatePat(params, objetivo) {
+    let Rj = Infinity;
+    const { resistividad, electrodeType } = params;
+
+    switch(electrodeType) {
+        case 'jabalina_v':
+            Rj = calculateJabalinaVertical(resistividad, params.l, params.d);
+            break;
+        case 'jabalina_h':
+            Rj = calculateJabalinaHorizontal(resistividad, params.h_l, params.h_p);
+            break;
+        case 'placa':
+            Rj = calculatePlaca(resistividad, params.placa_a, params.placa_b);
+            break;
+        case 'malla':
+             Rj = calculateMalla(resistividad, params.malla_l, params.malla_A);
+            break;
+    }
+
+    let numElectrodos = 0, Rt = Infinity;
+    if (Rj <= objetivo) {
+        numElectrodos = 1; Rt = Rj;
+    } else if (electrodeType === 'jabalina_v') { // Parallel only for vertical javelins
+        for (let i = 2; i <= 10; i++) {
+            const k = DB.parallelCoefficients[i];
+            const currentRt = k * Rj;
+            if (currentRt <= objetivo) { numElectrodos = i; Rt = currentRt; break; }
+        }
+        if (numElectrodos === 0) { numElectrodos = 10; Rt = DB.parallelCoefficients[10] * Rj; }
+    } else {
+        // For other types, if one doesn't meet, it fails (simplification)
+        numElectrodos = 1;
+        Rt = Rj;
+    }
+    
+    // Separation calculation is only relevant for vertical javelins
+    const Re = (electrodeType === 'jabalina_v' && params.l > 0 && params.d > 0) ? (params.l / Math.log(params.l / params.d)) : 0;
+    
+    return { Rj, Rt, numElectrodos, Re, cumple: Rt <= objetivo, objetivo, ...params };
+}
+    
+function performCalculations() {
+    const params = getInputs();
+    if (params.resistividad <= 0) {
+        alert('Por favor, ingrese un valor de resistividad válido.');
+        dom.loaderContainer.style.display = 'none';
+        dom.initialMessage.style.display = 'flex';
+        return;
+    }
+
+    if (params.mode === 'proyecto') {
+        const srv = params.service;
+        const srvObjective = srv.manualCheck && !isNaN(srv.manualInput) ? srv.manualInput : 1.0;
+        const patServiceParams = { resistividad: params.resistividad, electrodeType: 'jabalina_v', l: srv.l, d: srv.d };
+        const patService = calculatePat(patServiceParams, srvObjective);
+        patService.isManual = srv.manualCheck;
+
+        const patProteccion = params.sectores.map(sector => {
+            const objective = getPatObjective(sector.rcd, params.ul, sector.manualCheck, sector.manualInput);
+            const patParams = { resistividad: params.resistividad, electrodeType: sector.electrodeType, l: sector.l, d: sector.d };
+            const result = {
+                ...calculatePat(patParams, objective),
+                name: sector.name, rcd: sector.rcd, isManual: sector.manualCheck
+            };
+            return result;
+        });
+        currentResults = { params, patService, patProteccion };
+    } else {
+        const p = params.domiciliaria;
+        const objective = getPatObjective(p.rcd, params.ul, p.manualCheck, p.manualInput);
+        const patParams = { resistividad: params.resistividad, ...p };
+        const patUnica = calculatePat(patParams, objective);
+        patUnica.isManual = p.manualCheck;
+        patUnica.rcd = p.rcd;
+        currentResults = { params, patUnica };
+    }
+    displayResults(currentResults);
+}
+
+// --- DISPLAY FUNCTIONS ---
+function displayResults(results) {
+    dom.loaderContainer.style.display = 'none';
+    dom.resultsContainer.style.display = 'block';
+    const content = results.params.mode === 'proyecto' ? generateProjectContent(results) : generateDomiciliariaContent(results);
+    dom.resultsContainer.innerHTML = content;
+    document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', e => switchTab(e.currentTarget)));
+    getElement('results-container').addEventListener('click', (e) => {
+        if (e.target.id === 'exportTxtBtn') exportToTxt();
+        if (e.target.id === 'exportCsvBtn') exportToCsv();
+    });
+    if (window.MathJax) MathJax.typesetPromise();
+    switchTab(document.querySelector('.tab-button[data-tab="resultados"]'));
+}
+    
+function generateBaseLayout(title, content) {
+     return `
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-gray-600 pb-4">
+            <h2 class="text-2xl font-semibold">${title}</h2>
+            <div class="flex space-x-2 mt-4 sm:mt-0">
+                <button id="exportTxtBtn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center text-sm">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Copiar Informe
+                </button>
+                <button id="exportCsvBtn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 flex items-center text-sm">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Exportar CSV
+                </button>
+            </div>
+        </div>
+        <div class="border-b border-gray-600 mb-6">
+            <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto" aria-label="Tabs">
+                <button class="tab-button active py-2 px-3 sm:px-4 text-sm font-medium" data-tab="resultados">Resultados</button>
+                <button class="tab-button py-2 px-3 sm:px-4 text-sm font-medium" data-tab="calculos">Anexo: Cálculos</button>
+                <button class="tab-button py-2 px-3 sm:px-4 text-sm font-medium" data-tab="formulas">Anexo: Fórmulas</button>
+                <button class="tab-button py-2 px-3 sm:px-4 text-sm font-medium" data-tab="tablas">Anexo: Tablas</button>
+            </nav>
+        </div>
+        <div id="tab-content">${content}</div>`;
+}
+
+function switchTab(clickedButton) {
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    clickedButton.classList.add('active');
+    document.querySelectorAll('.result-section').forEach(section => section.style.display = 'none');
+    getElement(`tab-${clickedButton.dataset.tab}`).style.display = 'block';
+}
+
+// --- CONTENT GENERATORS ---
+function generateProjectContent(results) { return generateBaseLayout("Resultados del Proyecto (Esquema TT)", `${generateProjectResultsTab(results)}${generateProjectCalculosTab(results)}${generateFormulasTab()}${generateTablasTab()}`); }
+function generateDomiciliariaContent(results) { return generateBaseLayout("Resultados Verificación Domiciliaria", `${generateDomiciliariaResultsTab(results)}${generateDomiciliariaCalculosTab(results)}${generateFormulasTab()}${generateTablasTab()}`); }
+
+function createResultCard(title, id, {Rt, Rj, numElectrodos, cumple, objetivo, rcd, isManual, electrodeType}) {
+    const statusClass = cumple ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800';
+    const objectiveType = isManual ? '(Manual)' : `(Reglamento, ${rcd}mA)`;
+    const solutionText = electrodeType === 'jabalina_v' ? `${numElectrodos} Jabalina(s)` : '1 Electrodo';
+    
+    return `<div class="bg-gray-700 p-4 rounded-lg flex flex-col h-full">
+                <h4 class="font-bold text-lg text-white">${title} <span class="text-sm font-normal text-gray-400">(${id})</span></h4>
+                <div class="mt-3 space-y-2 text-sm flex-grow">
+                    <div class="flex justify-between"><span>Resistencia 1 Electrodo (Rj):</span><span class="font-semibold">${Rj.toFixed(2)} Ω</span></div>
+                    <div class="flex justify-between"><span>Objetivo ${objectiveType}:</span><span class="font-semibold">≤ ${objetivo.toFixed(1)} Ω</span></div>
+                    <hr class="border-gray-600">
+                    <div class="flex justify-between text-base"><b>Solución Propuesta:</b><span class="font-bold">${solutionText}</span></div>
+                    <div class="flex justify-between"><span>Resistencia Final (RT):</span><span class="font-bold text-lg">${Rt.toFixed(2)} Ω</span></div>
+                </div>
+                <div class="mt-4">
+                    ${generateSvgResult(numElectrodos, electrodeType)}
+                </div>
+                <div class="mt-3 text-center text-sm font-bold p-1 rounded ${statusClass}">${cumple ? 'CUMPLE' : 'NO CUMPLE'}</div>
+            </div>`;
+}
+function generateProjectResultsTab({ patService, patProteccion }) {
+    const serviceCard = createResultCard('Puesta a Tierra de Servicio', 'RB', patService);
+    const protectionCards = patProteccion.map((p, i) => createResultCard(p.name, `RA${i+1}`, p)).join('');
+    return `<div id="tab-resultados" class="result-section space-y-6"><div><h3 class="text-xl font-semibold text-blue-400 mb-3">1. Sistema de Servicio (Neutro)</h3><p class="text-sm text-gray-400 mb-2">Puesta a tierra para estabilidad de la red.</p>${serviceCard}</div><div><h3 class="text-xl font-semibold text-blue-400 mb-3">2. Sistemas de Protección (Masas)</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">${protectionCards}</div></div><div><h3 class="text-xl font-semibold text-blue-400 mb-3">3. Requisito de Separación</h3><div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Separación Mínima entre Jabalinas de distintos sistemas (Recomendado > 5m). Aplicable solo a jabalinas verticales.</p><p class="text-2xl font-bold">${(patService.Re > 0 ? (patService.Re * 10).toFixed(2) : 'N/A')} m</p></div></div></div>`;
+}
+function generateProjectCalculosTab({ patService, patProteccion, params }) {
+    const serviceCalc = `RT = K * Rj = ${DB.parallelCoefficients[patService.numElectrodos]} * ${patService.Rj.toFixed(2)} = ${patService.Rt.toFixed(2)} Ω`;
+    const protectionCalcs = patProteccion.map((p, i) => `<div class="bg-gray-700 p-4 rounded-lg"><h4 class="font-semibold mb-2 text-blue-400">Cálculo para ${p.name} (RA${i+1})</h4><p class="font-mono text-sm break-words">Rj = (${params.resistividad.toFixed(2)} / (2π * ${p.l})) * ln((4*${p.l}/${p.d}) - 1) = ${p.Rj.toFixed(2)} Ω</p><p class="font-mono text-sm break-words">RT = K * Rj = ${DB.parallelCoefficients[p.numElectrodos]} * ${p.Rj.toFixed(2)} = ${p.Rt.toFixed(2)} Ω</p><p class="text-xs text-gray-400 mt-2">Objetivo ${p.isManual ? '(Manual)' : `(Reglamento, ${p.rcd}mA, UL=${params.ul}V)`}: ≤ ${p.objetivo} Ω</p></div>`).join('');
+    return `<div id="tab-calculos" class="result-section space-y-4"><div class="bg-gray-700 p-4 rounded-lg"><h4 class="font-semibold mb-2 text-blue-400">Cálculo para Servicio (RB)</h4><p class="font-mono text-sm break-words">Rj (${patService.l}m x ${patService.d}m) = (${params.resistividad.toFixed(2)} / (2π * ${patService.l})) * ln((4*${patService.l}/${patService.d}) - 1) = ${patService.Rj.toFixed(2)} Ω</p><p class="font-mono text-sm break-words">${serviceCalc}</p></div>${protectionCalcs}</div>`;
+}
+function generateDomiciliariaResultsTab({ patUnica }) {
+    return `<div id="tab-resultados" class="result-section">${createResultCard('Verificación Domiciliaria', 'RA', patUnica)}</div>`;
+}
+function generateDomiciliariaCalculosTab({ patUnica, params }) {
+    const { Rj, Rt, numElectrodos, objetivo, rcd, isManual, electrodeType } = patUnica;
+    const { resistividad, ul } = params;
+    let rjFormula = '';
+    switch(electrodeType){
+        case 'jabalina_v': rjFormula = `Rj = (${resistividad.toFixed(2)} / (2π * ${patUnica.l})) * ln((4*${patUnica.l}/${patUnica.d}) - 1) = ${Rj.toFixed(2)} Ω`; break;
+        case 'jabalina_h': rjFormula = `Rj = (${resistividad.toFixed(2)} / (2π * ${patUnica.h_l})) * (ln(4*${patUnica.h_l}²/${patUnica.h_p}) - 1) = ${Rj.toFixed(2)} Ω`; break;
+        case 'placa': rjFormula = `Rj ≈ (${resistividad.toFixed(2)} / (2*(${patUnica.placa_a}+${patUnica.placa_b}))) * (π/2) = ${Rj.toFixed(2)} Ω`; break;
+        case 'malla': rjFormula = `Rj ≈ ${resistividad.toFixed(2)} * (1/${patUnica.malla_l} + 1/√20*${patUnica.malla_A}) = ${Rj.toFixed(2)} Ω`; break;
+    }
+
+    return `<div id="tab-calculos" class="result-section space-y-4">
+        <div class="bg-gray-700 p-4 rounded-lg"><h4 class="font-semibold mb-2 text-blue-400">1. Cálculo de Resistencia de Electrodo (Rj)</h4><p class="font-mono text-sm break-words">${rjFormula}</p></div>
+        <div class="bg-gray-700 p-4 rounded-lg"><h4 class="font-semibold mb-2 text-blue-400">2. Determinación de Resistencia Máxima (RA max)</h4><p class="font-mono text-sm break-words">${ isManual ? `Objetivo Manual: ${objetivo} Ω` : `RA_max = min(UL/IΔn, Límite_Tabla) = ${objetivo} Ω`}</p></div>
+        <div class="bg-gray-700 p-4 rounded-lg"><h4 class="font-semibold mb-2 text-blue-400">3. Cálculo de Sistema Final (RT)</h4><p class="font-mono text-sm break-words">${numElectrodos === 1 ? 'RT = Rj' : `RT = K * Rj = ${DB.parallelCoefficients[numElectrodos]} * ${Rj.toFixed(2)}`} = ${Rt.toFixed(2)} Ω</p></div>
+        </div>`;
+}
+ function generateFormulasTab() {
+     return `<div id="tab-formulas" class="result-section space-y-6">
+        <div><h4 class="font-semibold text-lg text-blue-400">Resistencia Jabalina Vertical (Rj)</h4><div class="bg-gray-700 p-4 rounded-lg mt-2 font-mono text-center text-lg">$$ R_j = \\left(\\frac{\\rho}{2 \\cdot \\pi \\cdot L}\\right) \\cdot \\ln\\left(\\frac{4L}{d} - 1\\right) $$</div></div>
+        <div><h4 class="font-semibold text-lg text-blue-400">Resistencia Jabalinas en Paralelo (RT)</h4><div class="bg-gray-700 p-4 rounded-lg mt-2 font-mono text-center text-lg">$$ R_T = K \\cdot R_j $$</div></div>
+        <div><h4 class="font-semibold text-lg text-blue-400">Resistencia Máxima de Protección (RA)</h4><div class="bg-gray-700 p-4 rounded-lg mt-2 font-mono text-center text-lg">$$ R_A \\le \\frac{U_L}{I_{\\Delta n}} $$</div></div>
+        <p class="text-xs text-gray-400">Nota: Las fórmulas para placas, mallas y jabalinas horizontales son aproximaciones simplificadas para esta herramienta.</p>
+        </div>`;
+ }
+ function generateTablasTab() {
+     const soilRows = Object.entries(DB.soilResistivity).map(([val, name]) => `<tr><td class="p-3">${name}</td><td class="p-3 text-right">${val} Ω·m</td></tr>`).join('');
+     const parallelRows = Object.entries(DB.parallelCoefficients).map(([n, k]) => `<tr><td class="p-3">${n}</td><td class="p-3 text-right">${k}</td></tr>`).join('');
+     const rcdRows = Object.entries(DB.aeaFinalCap).map(([rcd, res]) => `<tr><td class="p-3">${parseInt(rcd) < 1000 ? rcd + ' mA' : rcd/1000 + ' A'}</td><td class="p-3 text-right">${DB.aeaTable['50'][rcd] || '-'} Ω</td><td class="p-3 text-right">${DB.aeaTable['24'][rcd] || '-'} Ω</td><td class="p-3 text-right font-bold text-white">${res} Ω</td></tr>`).join('');
+     return `<div id="tab-tablas" class="result-section"><div class="grid grid-cols-1 gap-6"><div class="lg:col-span-2"><h4 class="font-semibold mb-3 text-blue-400">Tabla 1: Resistencia Máxima de Protección vs. Diferencial (AEA 90364)</h4><div class="overflow-x-auto bg-gray-700 rounded-lg"><table class="w-full text-sm text-left"><thead class="bg-gray-600 text-xs uppercase"><tr><th class="p-3" rowspan="2">Sensibilidad (IΔn)</th><th class="p-3 text-center" colspan="3">Resistencia Máxima (RA)</th></tr><tr><th class="p-3 text-right">UL = 50V</th><th class="p-3 text-right">UL = 24V</th><th class="p-3 text-right">Valor Final</th></tr></thead><tbody class="divide-y divide-gray-600">${rcdRows}</tbody></table></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><h4 class="font-semibold mb-3 text-blue-400">Tabla 2: Resistividad del Terreno</h4><div class="overflow-x-auto bg-gray-700 rounded-lg"><table class="w-full text-sm text-left"><thead class="bg-gray-600 text-xs uppercase"><tr><th class="p-3">Tipo de Suelo</th><th class="p-3 text-right">Valor</th></tr></thead><tbody class="divide-y divide-gray-600">${soilRows}</tbody></table></div></div><div><h4 class="font-semibold mb-3 text-blue-400">Tabla 3: Coeficientes Paralelo (K)</h4><div class="overflow-x-auto bg-gray-700 rounded-lg"><table class="w-full text-sm text-left"><thead class="bg-gray-600 text-xs uppercase"><tr><th class="p-3">N° Jabalinas</th><th class="p-3 text-right">K</th></tr></thead><tbody class="divide-y divide-gray-600">${parallelRows}</tbody></table></div></div></div></div></div>`;
+ }
+ 
+// --- SVG & UTILITY FUNCTIONS ---
+function generateSvgResult(count, type) {
+    let svgContent = '';
+    const spacing = 30;
+    const totalWidth = count * 10 + (count - 1) * (spacing - 10);
+    
+    switch(type) {
+        case 'jabalina_v':
+            for (let i = 0; i < count; i++) {
+                svgContent += `<rect x="${i * spacing}" y="10" width="10" height="50" fill="#9ca3af" />`;
+            }
+            if (count > 1) {
+                svgContent += `<line x1="5" y1="5" x2="${totalWidth - 5}" y2="5" stroke="#9ca3af" stroke-width="2" />`;
+                for (let i = 0; i < count; i++) {
+                    svgContent += `<line x1="${i * spacing + 5}" y1="5" x2="${i * spacing + 5}" y2="10" stroke="#9ca3af" stroke-width="2" />`;
+                }
+            }
+            return `<svg viewBox="-5 0 ${totalWidth + 10} 70" class="mx-auto h-20">${svgContent}</svg>`;
+        case 'jabalina_h':
+            return `<svg viewBox="0 0 100 30" class="mx-auto h-12"><rect x="5" y="10" width="90" height="10" fill="#9ca3af" /></svg>`;
+        case 'placa':
+            return `<svg viewBox="0 0 60 40" class="mx-auto h-16"><rect x="5" y="5" width="50" height="30" fill="#9ca3af" /></svg>`;
+        case 'malla':
+            return `<svg viewBox="0 0 100 60" class="mx-auto h-20">
+                <defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#9ca3af" stroke-width="1"/></pattern></defs>
+                <rect width="100" height="60" fill="url(#grid)" stroke="#9ca3af" stroke-width="2" />
+            </svg>`;
+    }
+    return '';
+}
+
+function exportToTxt() {
+    // This function can be expanded to provide more detailed text reports
+    if (!currentResults) { alert("Primero debe realizar un cálculo."); return; }
+    let report = `Informe de Puesta a Tierra\n============================\n`;
+    // Simplified report for brevity
+    report += `Modo: ${currentResults.params.mode}\nResistividad: ${currentResults.params.resistividad.toFixed(2)} ohm.m\n`;
+    if(currentResults.patUnica){
+        report += `Resultado Domiciliaria: ${currentResults.patUnica.Rt.toFixed(2)} ohm (${currentResults.patUnica.cumple ? 'CUMPLE' : 'NO CUMPLE'})`;
+    }
+    dom.exportTextarea.value = report;
+    dom.exportTextarea.select();
+    try { document.execCommand('copy'); alert('¡Informe copiado al portapapeles!'); } catch (err) { alert('Error al copiar.'); }
+}
+
+function exportToCsv() {
+    if (!currentResults) { alert("Primero debe realizar un cálculo."); return; }
+    let csvContent = "data:text/csv;charset=utf-8,";
+    const headers = "Tipo Sistema,Nombre/ID,Resultado,Resistencia Final (ohm),Electrodos Necesarios,Objetivo (ohm),Resistividad (ohm.m)\n";
+    csvContent += headers;
+    const { params } = currentResults;
+     if (params.mode === 'proyecto') {
+        const { patService, patProteccion } = currentResults;
+        csvContent += `Servicio,RB,${patService.cumple ? 'CUMPLE' : 'NO CUMPLE'},${patService.Rt.toFixed(2)},${patService.numElectrodos},${patService.objetivo.toFixed(1)},${params.resistividad.toFixed(2)}\n`;
+        patProteccion.forEach((p, i) => {
+            csvContent += `Proteccion,${p.name} (RA${i+1}),${p.cumple ? 'CUMPLE' : 'NO CUMPLE'},${p.Rt.toFixed(2)},${p.numElectrodos},${p.objetivo.toFixed(1)},${params.resistividad.toFixed(2)}\n`;
+        });
+    } else {
+        const { patUnica } = currentResults;
+        csvContent += `Proteccion,Domiciliaria (RA),${patUnica.cumple ? 'CUMPLE' : 'NO CUMPLE'},${patUnica.Rt.toFixed(2)},${patUnica.numElectrodos},${patUnica.objetivo.toFixed(1)},${params.resistividad.toFixed(2)}\n`;
+    }
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "calculo_puesta_a_tierra.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 </script>
 </body>
 </html>
